@@ -1,7 +1,6 @@
 package com.example.smartlab
 
 import android.os.Bundle
-import android.text.Layout
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -18,20 +17,27 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.TopAppBar
-import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,7 +52,6 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.delay
-import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,7 +81,7 @@ fun AppNavigator() {
 @Composable
 fun GreetingPreview() {
     SmartLabTheme {
-        AppNavigator()
+        MainScreen()
     }
 }
 
@@ -118,7 +123,6 @@ fun SplashScreen(navController: NavController) {
     }
 }
 
-@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun WelcomeScreen(navController: NavController) {
     val pagerState = rememberPagerState()
@@ -211,9 +215,40 @@ data class PageData(
 )
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
-    Box{}
+    Box(Modifier.fillMaxSize()) {
+        Column {
+            Row(Modifier.fillMaxWidth().padding(top = 60.dp), Arrangement.Center) {
+                Image(
+                    painter = painterResource(id = R.mipmap.hello_foreground), // Ссылка на векторное изображение
+                    contentDescription = "..",
+                    contentScale = ContentScale.Fit, // Масштабирование изображения
+                    modifier = Modifier.size(30.dp) // Размер изображения
+                    // .padding(top = 10.dp)
+                )
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    text = "Добро пожаловать!",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 28.sp
+                )
+            }
+            Row() {
+                Text(
+                    text = "Войдите, чтобы пользоваться функциями приложения",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Normal,
+                    lineHeight = 20.sp,
+                    modifier = Modifier.padding(15.dp)
+                )
+            }
+            TextBox()
+
+        }
+    }
 }
 
 
