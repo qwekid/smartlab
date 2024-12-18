@@ -57,7 +57,9 @@ import com.example.smartlab.ui.theme.SmartLabTheme
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
+import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 
 
 class MainActivity : ComponentActivity() {
@@ -415,6 +417,33 @@ fun ProoveEmail(navController: NavController,
     }
 
 fun ResendCode(){}
+
+import kotlinx.coroutines.runBlocking
+import kotlin.random.Random
+
+// Генерация 6-значного кода
+fun generateVerificationCode(): String {
+    return (100000..999999).random().toString()
+}
+
+// Отправка кода на email
+fun sendVerificationCode(email: String) {
+    val verificationCode = generateVerificationCode()
+
+    runBlocking {
+        try {
+            //supabase.pluginManager.getPlugin(GoTrue).sendEmail(
+               // email = email,
+                //subject = "Код подтверждения",
+                //body = "Ваш код подтверждения: $verificationCode"
+            //)
+            println("Код подтверждения отправлен на $email")
+        } catch (e: Exception) {
+            println("Ошибка отправки кода: ${e.message}")
+        }
+    }
+}
+
 
 
 

@@ -56,6 +56,8 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.compose.ui.tooling)
     implementation(libs.compose.runtime)
+    implementation(libs.supabase.postgrest)
+    implementation(libs.supabase.gotrue)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
