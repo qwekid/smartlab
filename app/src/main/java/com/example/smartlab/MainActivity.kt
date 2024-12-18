@@ -2,6 +2,7 @@ package com.example.smartlab
 
 import PrimaryButton
 import android.os.Bundle
+import android.util.Range
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -30,6 +31,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -78,7 +80,7 @@ fun AppNavigator() {
         composable("splash") { SplashScreen(navController) }
         composable("welcome") { WelcomeScreen(navController) }
         composable("main") { LogInScreen(navController) }
-        composable("prooveEmail") { ProoveEmail(onResendCode = {ResendCode()}) }
+        composable("prooveEmail") { ProoveEmail(onResendCode = {ResendCode()}, navController = navController) }
     }
 }
 
@@ -86,8 +88,16 @@ fun AppNavigator() {
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
+    val navController = rememberNavController()
+
+    NavHost(navController, startDestination = "splash") {
+        composable("splash") { SplashScreen(navController) }
+        composable("welcome") { WelcomeScreen(navController) }
+        composable("main") { LogInScreen(navController) }
+        composable("prooveEmail") { ProoveEmail(onResendCode = {ResendCode()}, navController = navController) }
+    }
     SmartLabTheme {
-        ProoveEmail(onResendCode = {ResendCode()})
+        ProoveEmail(navController = navController, onResendCode = { ResendCode()})
     }
 }
 
@@ -316,8 +326,9 @@ fun LogInScreen(navController: NavController) {
 }
 
 @Composable
-fun ProoveEmail(modifier: Modifier = Modifier,
+fun ProoveEmail(navController: NavController,
                 onResendCode: () -> Unit, // Callback для повторной отправки кода
+
                  ) {
         // Состояние для ввода кода
         var code by remember { mutableStateOf("") }
@@ -327,6 +338,9 @@ fun ProoveEmail(modifier: Modifier = Modifier,
         var timerSeconds by remember { mutableStateOf(60) }
         var isTimerRunning by remember { mutableStateOf(true) }
 
+    val textFieldValues = remember { mutableStateListOf("", "", "", "", "", "") }
+
+    val allFieldsFilled = textFieldValues.all { it.isNotBlank() }
         // Эффект для таймера
         LaunchedEffect(key1 = isTimerRunning) {
             if (isTimerRunning) {
@@ -357,14 +371,16 @@ fun ProoveEmail(modifier: Modifier = Modifier,
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                for (i in 0 until maxCodeLength) {
-                    val char = code.getOrNull(i)?.toString() ?: ""
+                textFieldValues.forEachIndexed { index, value ->
                     OutlinedTextField(
-                        value = code,
+                        value = value,
                         onValueChange = { newValue ->
-                            if (newValue.length <= maxCodeLength && newValue.all { it.isDigit() }) {
-                                code += newValue
-                            }
+                            textFieldValues[index] = newValue
+                                if(allFieldsFilled ){
+                                    //TODO переход на след экран
+                                    navController.navigate("splash")
+                                }
+
                         },
                         modifier = Modifier
                             .width(42.dp)
@@ -377,10 +393,7 @@ fun ProoveEmail(modifier: Modifier = Modifier,
                     )
                 }
             }
-
-            // Поле ввода для скрытого ввода цифр
-
-
+            
             Spacer(modifier = Modifier.height(16.dp))
 
             // Текст с таймером или кнопкой отправки кода
