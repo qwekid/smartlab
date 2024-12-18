@@ -16,25 +16,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 
 @Composable
-fun TextBox(modifier: Modifier = Modifier) {
+fun TextBox(modifier: Modifier = Modifier, placeholdertext:String) {
     var textState by remember { mutableStateOf(TextFieldValue("")) }
-    // Заголовок для TextField
-    Text(text = "Введите почту:", modifier = Modifier.padding(start = 10.dp))
-
-
     OutlinedTextField(
         value = textState,
         onValueChange = { textState = it },
-        modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 10.dp, end = 10.dp),
         enabled = true,
         readOnly = false,
         placeholder = {
-            Text(text = "Введите почту",
+            Text(text = placeholdertext,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Normal,
                 lineHeight = 20.sp)
@@ -54,4 +53,10 @@ fun TextBox(modifier: Modifier = Modifier) {
         ),
         shape = RoundedCornerShape(20.dp)
     )
+}
+
+@Preview
+@Composable
+private fun qwe() {
+    TextBox(placeholdertext = "example@mail.ru")
 }

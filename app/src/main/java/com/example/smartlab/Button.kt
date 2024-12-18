@@ -10,19 +10,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.smartlab.ui.theme.ButtonColor
 import com.example.smartlab.ui.theme.DisabledButtonColor
 
 @Composable
-fun CustomButton(
+fun PrimaryButton(
     text: String,
+    modifier: Modifier,
     enabled:Boolean = true,
     onClick: () -> Unit
 ) {
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = Modifier
+        modifier = modifier
             .padding(8.dp),
         colors = ButtonDefaults.textButtonColors(
             containerColor = ButtonColor,
@@ -30,12 +32,12 @@ fun CustomButton(
         ),
         shape = RoundedCornerShape(10.dp)
     ) {
-        Text(text = text, color = Color.White)
+        Text(text = text, color = Color.White, fontSize = 17.sp)
     }
 }
 @Preview(showBackground = true)
 @Composable
 fun PreviewMainScreen() {
-    CustomButton(text = "Нажми меня") {
+    PrimaryButton(text = "Нажми меня", modifier = Modifier) {
     }
 }

@@ -10,7 +10,8 @@ activityCompose = "1.9.3"
 composeBom = "2024.04.01"
 navigationCompose = "2.8.5"
 accompanist = "0.31.6-rc"
-
+compose_ui = "1.6.0"           # Версия Jetpack Compose UI
+compose_material3 = "1.2.0"    # Версия Material3
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -29,7 +30,10 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 accompanist-pager = { group = "com.google.accompanist", name = "accompanist-pager", version.ref = "accompanist" }
 accompanist-pager-indicators = { group = "com.google.accompanist", name = "accompanist-pager-indicators", version.ref = "accompanist" }
-
+compose-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "compose_ui" }
+compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling-preview", version.ref = "compose_ui" }
+compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "compose_material3" }
+compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "compose_ui" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

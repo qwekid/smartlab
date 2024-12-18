@@ -1,11 +1,13 @@
 package com.example.smartlab
 
+import PrimaryButton
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -37,7 +41,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,11 +52,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.smartlab.ui.theme.HeaderColor
 import com.example.smartlab.ui.theme.SmartLabTheme
-import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.delay
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,7 +77,8 @@ fun AppNavigator() {
     NavHost(navController, startDestination = "splash") {
         composable("splash") { SplashScreen(navController) }
         composable("welcome") { WelcomeScreen(navController) }
-        composable("main") { MainScreen() }
+        composable("main") { LogInScreen(navController) }
+        composable("prooveEmail") { ProoveEmail(onResendCode = {ResendCode()}) }
     }
 }
 
@@ -81,7 +87,7 @@ fun AppNavigator() {
 @Composable
 fun GreetingPreview() {
     SmartLabTheme {
-        MainScreen()
+        ProoveEmail(onResendCode = {ResendCode()})
     }
 }
 
@@ -151,7 +157,8 @@ fun WelcomeScreen(navController: NavController) {
                 painter = painterResource(id = R.drawable.sq), // Ссылка на векторное изображение
                 contentDescription = "..",
                 contentScale = ContentScale.Fit, // Масштабирование изображения
-                modifier = Modifier.size(150.dp) // Размер изображения
+                modifier = Modifier
+                    .size(150.dp) // Размер изображения
                     .padding(top = 20.dp)
             )
 
@@ -201,7 +208,9 @@ fun WelcomePage(page: PageData) {
             painter = painterResource(id = page.imgId), // Ссылка на векторное изображение
             contentDescription = "..",
             contentScale = ContentScale.Fit, // Масштабирование изображения
-            modifier = Modifier.align(Alignment.BottomCenter).size(400.dp) // Размер изображения
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .size(400.dp) // Размер изображения
             //  .padding(top = 20.dp)
         )
     }
@@ -217,10 +226,13 @@ data class PageData(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun LogInScreen(navController: NavController) {
     Box(Modifier.fillMaxSize()) {
         Column {
-            Row(Modifier.fillMaxWidth().padding(top = 60.dp), Arrangement.Center) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 60.dp), Arrangement.Center) {
                 Image(
                     painter = painterResource(id = R.mipmap.hello_foreground), // Ссылка на векторное изображение
                     contentDescription = "..",
@@ -245,10 +257,151 @@ fun MainScreen() {
                     modifier = Modifier.padding(15.dp)
                 )
             }
-            TextBox()
+
+            Row {
+                Column {
+                    var email by remember { mutableStateOf("") }
+                    var isValidEmail by remember { mutableStateOf(false) }
+                    val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}\$")
+                    Text(
+                        text = "Вход по E-mail",
+                        modifier = Modifier.padding(start = 10.dp, bottom = 10.dp)
+                    )
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { newValue ->
+                            email = newValue
+                            isValidEmail = emailRegex.matches(newValue) // Проверка email
+                            },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 10.dp, end = 10.dp, bottom = 10.dp),
+                        enabled = true,
+                        readOnly = false,
+                        placeholder = {
+                            Text(
+                                text = "example@mail.ru",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Normal,
+                                lineHeight = 20.sp
+                            )
+                        },
+                        textStyle = TextStyle(
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Normal,
+                            lineHeight = 20.sp
+                        ),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            focusedTextColor = Color.Black.copy(0.5f),
+                            unfocusedTextColor = Color.Black.copy(0.5f),
+                            focusedBorderColor = Color.Black.copy(0.5f),
+                            unfocusedBorderColor = Color.Black.copy(0.5f)
+                        ),
+                        shape = RoundedCornerShape(20.dp)
+                    )
+                    PrimaryButton(
+                        text = "Далее",
+                        enabled = isValidEmail,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(65.dp),
+                        onClick = {navController.navigate("prooveEmail")})
+                }
+            }
 
         }
     }
 }
+
+@Composable
+fun ProoveEmail(modifier: Modifier = Modifier,
+                onResendCode: () -> Unit, // Callback для повторной отправки кода
+                 ) {
+        // Состояние для ввода кода
+        var code by remember { mutableStateOf("") }
+        val maxCodeLength = 6
+
+        // Состояние для таймера
+        var timerSeconds by remember { mutableStateOf(60) }
+        var isTimerRunning by remember { mutableStateOf(true) }
+
+        // Эффект для таймера
+        LaunchedEffect(key1 = isTimerRunning) {
+            if (isTimerRunning) {
+                while (timerSeconds > 0) {
+                    delay(1000L) // Задержка на 1 секунду
+                    timerSeconds--
+                }
+                isTimerRunning = false
+            }
+        }
+
+        // Основная разметка экрана
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Текст заголовка
+            Text(
+                text = "Введите код из E-mail",
+                style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            // Поле ввода для кода с квадратами
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                for (i in 0 until maxCodeLength) {
+                    val char = code.getOrNull(i)?.toString() ?: ""
+                    OutlinedTextField(
+                        value = code,
+                        onValueChange = { newValue ->
+                            if (newValue.length <= maxCodeLength && newValue.all { it.isDigit() }) {
+                                code += newValue
+                            }
+                        },
+                        modifier = Modifier
+                            .width(42.dp)
+                            .height(48.dp)
+                            .padding(top = 1.dp), // Небольшой отступ
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number
+                        ),
+                        textStyle = TextStyle(color = Color.Black, fontWeight = FontWeight.Bold)
+                    )
+                }
+            }
+
+            // Поле ввода для скрытого ввода цифр
+
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Текст с таймером или кнопкой отправки кода
+            if (isTimerRunning) {
+                Text(
+                    text = "Отправить код повторно можно\nбудет через $timerSeconds секунд",
+                    style = TextStyle(fontSize = 14.sp, color = Color.Gray),
+                    textAlign = TextAlign.Center
+                )
+            } else {
+                PrimaryButton(modifier = Modifier, text = "Выслать код повторно",onClick = {
+                    // Сбросить таймер и вызвать повторную отправку кода
+                    timerSeconds = 60
+                    isTimerRunning = true
+                    onResendCode()
+                })
+            }
+        }
+    }
+
+fun ResendCode(){}
+
 
 
