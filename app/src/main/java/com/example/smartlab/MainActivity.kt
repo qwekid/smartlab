@@ -89,6 +89,8 @@ fun AppNavigator() {
         composable("main") { LogInScreen(navController) }
         composable("prooveEmail") { ProoveEmail(onResendCode = {SendCode()}, navController = navController) }
         composable("setPasswordScreen") { SetPasswordScreen(navController) }
+        composable("CreateCardScreen") { CreateCardScreen(navController) }
+
     }
 }
 
@@ -337,10 +339,7 @@ fun LogInScreen(navController: NavController) {
 }
 
 @Composable
-fun ProoveEmail(navController: NavController,
-                onResendCode: () -> Unit, // Callback для повторной отправки кода
-
-                 ) {
+fun ProoveEmail(navController: NavController, onResendCode: () -> Unit, ) {
         // Состояние для ввода кода
         var code by remember { mutableStateOf(generateVerificationCode()) }
         val maxCodeLength = 6
@@ -406,7 +405,7 @@ fun ProoveEmail(navController: NavController,
                                 if (allFieldsFilled) {
                                     if (code + "\n" == textFieldValues.joinToString("")) {
                                         //TODO переход на след экран
-                                        navController.navigate("splash")
+                                        navController.navigate("setPasswordScreen")
                                     }
                                 }
 
@@ -476,11 +475,14 @@ fun SetPasswordScreen(navController: NavController) {
 
     val PassFieldValues = remember { mutableStateListOf("", "", "", "") }
 
-    Box(Modifier.fillMaxSize().background(Color.White)){
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color.White)){
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                 TextButton(
-                    onClick = { navController.navigate("main") },
+                    onClick = { navController.navigate("CreateCardScreen") },
                     modifier = Modifier
                         //.align(Alignment.Start)
                         .padding(16.dp)
@@ -511,7 +513,7 @@ fun SetPasswordScreen(navController: NavController) {
                     }
                 }
             }
-            Row(modifier = Modifier. padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+            Row(modifier = Modifier. padding(top = 30.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 var painterr = painterResource(id = R.drawable.ellipse_notfilled)
                 PassFieldValues.forEachIndexed { index, value ->
                     if (value!=""){
@@ -522,31 +524,33 @@ fun SetPasswordScreen(navController: NavController) {
                         contentDescription = "..",
                         contentScale = ContentScale.Fit, // Масштабирование изображения
                         modifier = Modifier
-                            .size(15.dp) // Размер изображения
+                            .size(20.dp) // Размер изображения
                             .fillMaxSize()
                     )
                 }
             }
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(5.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     for (row in 0 until 3) {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp, alignment = Alignment.CenterHorizontally)) {
                             for (col in 0 until 3) {
                                 val buttonNumber = row * 3 + col + 1
                                 Button(
                                     onClick = {},
                                     shape = RoundedCornerShape(100.dp),
-                                    modifier = Modifier.height(80.dp).width(80.dp),
+                                    modifier = Modifier
+                                        .height(100.dp)
+                                        .width(100.dp),
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = Color(0xFFF5F5F9),
                                         disabledContainerColor = Color(0xFFF5F5F9)
                                     )
                                 ) {
-                                    Text(text = buttonNumber.toString(), color = Color.Black)
+                                    Text(text = buttonNumber.toString(), color = Color.Black, fontSize = 24.sp)
                                 }
                             }
                         }
@@ -555,13 +559,15 @@ fun SetPasswordScreen(navController: NavController) {
                         Button(
                             onClick = {},
                             shape = RoundedCornerShape(100.dp),
-                            modifier = Modifier.height(80.dp).width(80.dp),
+                            modifier = Modifier
+                                .height(100.dp)
+                                .width(100.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFFF5F5F9),
                                 disabledContainerColor = Color(0xFFF5F5F9)
                             )
                         ) {
-                            Text(text = 0.toString(), color = Color.Black)
+                            Text(text = 0.toString(), color = Color.Black, fontSize = 24.sp)
                         }
                     }
                 }
@@ -569,6 +575,11 @@ fun SetPasswordScreen(navController: NavController) {
 
         }
     }
+}
+
+@Composable
+fun CreateCardScreen(navController: NavController) {
+    Box(Modifier.fillMaxSize().background(Color.White)){}
 }
 
 
