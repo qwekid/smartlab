@@ -12,6 +12,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +24,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -44,6 +47,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -52,12 +56,13 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.smartlab.ui.theme.ButtonColor
 import com.example.smartlab.ui.theme.HeaderColor
 import com.example.smartlab.ui.theme.SmartLabTheme
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
-import io.github.jan.supabase.auth.auth
+
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 
@@ -311,7 +316,10 @@ fun LogInScreen(navController: NavController) {
                             focusedBorderColor = Color.Black.copy(0.5f),
                             unfocusedBorderColor = Color.Black.copy(0.5f)
                         ),
-                        shape = RoundedCornerShape(20.dp)
+                        shape = RoundedCornerShape(20.dp),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email
+                        )
                     )
                     PrimaryButton(
                         text = "Далее",
@@ -333,7 +341,7 @@ fun ProoveEmail(navController: NavController,
 
                  ) {
         // Состояние для ввода кода
-        var code by remember { mutableStateOf("") }
+        var code by remember { mutableStateOf(generateVerificationCode()) }
         val maxCodeLength = 6
 
         // Состояние для таймера
@@ -353,80 +361,93 @@ fun ProoveEmail(navController: NavController,
                 isTimerRunning = false
             }
         }
+        Box(Modifier.fillMaxSize().background(Color.White).padding(top = 15.dp)) {
+            Button(onClick = {navController.navigate("main")}, modifier = Modifier.padding(0.dp), contentPadding = PaddingValues(0.dp), shape = RoundedCornerShape(0.dp), colors = ButtonDefaults.textButtonColors(containerColor = Color.White, disabledContainerColor = Color.White)) {
+                Image(
+                    painter = painterResource(id = R.drawable.back), // Ссылка на векторное изображение
+                    contentDescription = "..",
+                    contentScale = ContentScale.Fit, // Масштабирование изображения
+                    modifier = Modifier.size(30.dp) // Размер изображения
 
-        // Основная разметка экрана
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Текст заголовка
-            Text(
-                text = "Введите код из E-mail",
-                style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold),
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+                        .fillMaxSize()
 
-            // Поле ввода для кода с квадратами
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) }
+            // Основная разметка экрана
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                textFieldValues.forEachIndexed { index, value ->
-                    OutlinedTextField(
-                        value = value,
-                        onValueChange = { newValue ->
-                            textFieldValues[index] = newValue
-                                if(allFieldsFilled ){
-                                    //TODO переход на след экран
-                                    navController.navigate("splash")
+
+                // Текст заголовка
+                Text(
+                    text = "Введите код из E-mail",
+                    style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // Поле ввода для кода с квадратами
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    textFieldValues.forEachIndexed { index, value ->
+                        OutlinedTextField(
+                            value = value,
+                            onValueChange = { newValue ->
+                                textFieldValues[index] = newValue
+                                if (allFieldsFilled) {
+                                    if (code + "\n" == textFieldValues.joinToString("")) {
+                                        //TODO переход на след экран
+                                        navController.navigate("splash")
+                                    }
                                 }
 
-                        },
-                        modifier = Modifier
-                            .width(42.dp)
-                            .height(48.dp)
-                            .padding(top = 1.dp), // Небольшой отступ
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number
-                        ),
-                        textStyle = TextStyle(color = Color.Black, fontWeight = FontWeight.Bold)
-                    )
+                            },
+                            modifier = Modifier
+                                .width(42.dp)
+                                .height(48.dp)
+                                .padding(top = 1.dp), // Небольшой отступ
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number
+                            ),
+                            textStyle = TextStyle(color = Color.Black, fontWeight = FontWeight.Bold)
+                        )
+                    }
                 }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
 
-            // Текст с таймером или кнопкой отправки кода
-            if (isTimerRunning) {
-                Text(
-                    text = "Отправить код повторно можно\nбудет через $timerSeconds секунд",
-                    style = TextStyle(fontSize = 14.sp, color = Color.Gray),
-                    textAlign = TextAlign.Center
-                )
-            } else {
-                PrimaryButton(modifier = Modifier, text = "Выслать код повторно",onClick = {
-                    // Сбросить таймер и вызвать повторную отправку кода
-                    timerSeconds = 60
-                    isTimerRunning = true
-                    onResendCode()
-                })
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Текст с таймером или кнопкой отправки кода
+                if (isTimerRunning) {
+                    Text(
+                        text = "Отправить код повторно можно\nбудет через $timerSeconds секунд",
+                        style = TextStyle(fontSize = 14.sp, color = Color.Gray),
+                        textAlign = TextAlign.Center
+                    )
+                } else {
+                    PrimaryButton(modifier = Modifier, text = "Выслать код повторно", onClick = {
+                        // Сбросить таймер и вызвать повторную отправку кода
+                        timerSeconds = 60
+                        isTimerRunning = true
+                        onResendCode()
+                    })
+                }
             }
         }
     }
 
-fun ResendCode(){}
+fun ResendCode(){
 
-import kotlinx.coroutines.runBlocking
-import kotlin.random.Random
-
+}
 // Генерация 6-значного кода
 fun generateVerificationCode(): String {
-    return (100000..999999).random().toString()
+    return 111111.toString()
+    //return (100000..999999).random().toString()
 }
 
-// Отправка кода на email
+//TODO Отправка кода на email
 fun sendVerificationCode(email: String) {
     val verificationCode = generateVerificationCode()
 
