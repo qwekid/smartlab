@@ -8,7 +8,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,7 +23,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
@@ -40,23 +38,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.times
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.times
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.smartlab.ui.theme.ButtonColor
 import com.example.smartlab.ui.theme.HeaderColor
 import com.example.smartlab.ui.theme.SmartLabTheme
 import com.google.accompanist.pager.HorizontalPager
@@ -65,6 +64,7 @@ import com.google.accompanist.pager.rememberPagerState
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlin.time.times
 
 
 class MainActivity : ComponentActivity() {
@@ -87,7 +87,8 @@ fun AppNavigator() {
         composable("splash") { SplashScreen(navController) }
         composable("welcome") { WelcomeScreen(navController) }
         composable("main") { LogInScreen(navController) }
-        composable("prooveEmail") { ProoveEmail(onResendCode = {ResendCode()}, navController = navController) }
+        composable("prooveEmail") { ProoveEmail(onResendCode = {SendCode()}, navController = navController) }
+        composable("setPasswordScreen") { SetPasswordScreen(navController) }
     }
 }
 
@@ -101,10 +102,10 @@ fun GreetingPreview() {
         composable("splash") { SplashScreen(navController) }
         composable("welcome") { WelcomeScreen(navController) }
         composable("main") { LogInScreen(navController) }
-        composable("prooveEmail") { ProoveEmail(onResendCode = {ResendCode()}, navController = navController) }
+        composable("prooveEmail") { ProoveEmail(onResendCode = {SendCode()}, navController = navController) }
     }
     SmartLabTheme {
-        ProoveEmail(navController = navController, onResendCode = { ResendCode()})
+        SetPasswordScreen(navController)
     }
 }
 
@@ -361,13 +362,18 @@ fun ProoveEmail(navController: NavController,
                 isTimerRunning = false
             }
         }
-        Box(Modifier.fillMaxSize().background(Color.White).padding(top = 15.dp)) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(top = 15.dp)) {
             Button(onClick = {navController.navigate("main")}, modifier = Modifier.padding(0.dp), contentPadding = PaddingValues(0.dp), shape = RoundedCornerShape(0.dp), colors = ButtonDefaults.textButtonColors(containerColor = Color.White, disabledContainerColor = Color.White)) {
                 Image(
                     painter = painterResource(id = R.drawable.back), // Ссылка на векторное изображение
                     contentDescription = "..",
                     contentScale = ContentScale.Fit, // Масштабирование изображения
-                    modifier = Modifier.size(30.dp) // Размер изображения
+                    modifier = Modifier
+                        .size(30.dp) // Размер изображения
 
                         .fillMaxSize()
 
@@ -438,7 +444,7 @@ fun ProoveEmail(navController: NavController,
         }
     }
 
-fun ResendCode(){
+fun SendCode(){
 
 }
 // Генерация 6-значного кода
@@ -461,6 +467,106 @@ fun sendVerificationCode(email: String) {
             println("Код подтверждения отправлен на $email")
         } catch (e: Exception) {
             println("Ошибка отправки кода: ${e.message}")
+        }
+    }
+}
+
+@Composable
+fun SetPasswordScreen(navController: NavController) {
+
+    val PassFieldValues = remember { mutableStateListOf("", "", "", "") }
+
+    Box(Modifier.fillMaxSize().background(Color.White)){
+        Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                TextButton(
+                    onClick = { navController.navigate("main") },
+                    modifier = Modifier
+                        //.align(Alignment.Start)
+                        .padding(16.dp)
+                ) {
+                    Text("Пропустить")
+                }
+            }
+            Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Row {
+                        Text(
+                            text = "Создайте пароль",
+                            fontStyle = FontStyle.Normal,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 24.sp,
+                            lineHeight = 29.sp
+                        )
+                    }
+                    Row (horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()){
+                        Text(
+                            text = "Для защиты ваших персональных данных",
+                            fontStyle = FontStyle.Normal,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 15.sp,
+                            lineHeight = 20.sp,
+                            color = Color.Black.copy(alpha = 0.5f)
+                        )
+                    }
+                }
+            }
+            Row(modifier = Modifier. padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                var painterr = painterResource(id = R.drawable.ellipse_notfilled)
+                PassFieldValues.forEachIndexed { index, value ->
+                    if (value!=""){
+                        painterr = painterResource(id = R.drawable.ellipse_filled)
+                    }
+                    Image(
+                        painter = painterr, // Ссылка на векторное изображение
+                        contentDescription = "..",
+                        contentScale = ContentScale.Fit, // Масштабирование изображения
+                        modifier = Modifier
+                            .size(15.dp) // Размер изображения
+                            .fillMaxSize()
+                    )
+                }
+            }
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(5.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    for (row in 0 until 3) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                            for (col in 0 until 3) {
+                                val buttonNumber = row * 3 + col + 1
+                                Button(
+                                    onClick = {},
+                                    shape = RoundedCornerShape(100.dp),
+                                    modifier = Modifier.height(80.dp).width(80.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFF5F5F9),
+                                        disabledContainerColor = Color(0xFFF5F5F9)
+                                    )
+                                ) {
+                                    Text(text = buttonNumber.toString(), color = Color.Black)
+                                }
+                            }
+                        }
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                        Button(
+                            onClick = {},
+                            shape = RoundedCornerShape(100.dp),
+                            modifier = Modifier.height(80.dp).width(80.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFF5F5F9),
+                                disabledContainerColor = Color(0xFFF5F5F9)
+                            )
+                        ) {
+                            Text(text = 0.toString(), color = Color.Black)
+                        }
+                    }
+                }
+            }
+
         }
     }
 }
