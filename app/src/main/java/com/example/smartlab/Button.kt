@@ -25,7 +25,8 @@ fun PrimaryButton(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier
-            .padding(8.dp),
+            //.padding(8.dp)
+                ,
         colors = ButtonDefaults.textButtonColors(
             containerColor = ButtonColor,
             disabledContainerColor = DisabledButtonColor

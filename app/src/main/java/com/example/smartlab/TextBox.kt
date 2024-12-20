@@ -51,7 +51,8 @@ fun TextBox(modifier: Modifier = Modifier, placeholdertext:String) {
             focusedBorderColor = Color.Black.copy(0.5f),
             unfocusedBorderColor = Color.Black.copy(0.5f)
         ),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(20.dp),
+        maxLines = 1
     )
 }
 

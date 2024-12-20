@@ -1,13 +1,15 @@
 package com.example.smartlab
 
 import PrimaryButton
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Range
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,14 +26,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -40,24 +46,28 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.times
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.unit.times
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.example.smartlab.ui.theme.HeaderColor
 import com.example.smartlab.ui.theme.SmartLabTheme
 import com.google.accompanist.pager.HorizontalPager
@@ -66,7 +76,6 @@ import com.google.accompanist.pager.rememberPagerState
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlin.time.times
 
 
 class MainActivity : ComponentActivity() {
@@ -75,14 +84,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SmartLabTheme {
-                AppNavigator()
+                AppNavigator(this)
             }
         }
     }
 }
 
 @Composable
-fun AppNavigator() {
+fun AppNavigator(context: Context) {
     val navController = rememberNavController()
 
     NavHost(navController, startDestination = "splash") {
@@ -90,9 +99,8 @@ fun AppNavigator() {
         composable("welcome") { WelcomeScreen(navController) }
         composable("main") { LogInScreen(navController) }
         composable("prooveEmail") { ProoveEmail(onResendCode = {SendCode()}, navController = navController) }
-        composable("setPasswordScreen") { SetPasswordScreen(navController) }
+        composable("setPasswordScreen") { SetPasswordScreen(navController,context) }
         composable("CreateCardScreen") { CreateCardScreen(navController) }
-
     }
 }
 
@@ -101,7 +109,6 @@ fun AppNavigator() {
 @Composable
 fun GreetingPreview() {
     val navController = rememberNavController()
-
     NavHost(navController, startDestination = "splash") {
         composable("splash") { SplashScreen(navController) }
         composable("welcome") { WelcomeScreen(navController) }
@@ -109,7 +116,7 @@ fun GreetingPreview() {
         composable("prooveEmail") { ProoveEmail(onResendCode = {SendCode()}, navController = navController) }
     }
     SmartLabTheme {
-        SetPasswordScreen(navController)
+        CreateCardScreen(navController)
     }
 }
 
@@ -350,7 +357,8 @@ fun ProoveEmail(navController: NavController, onResendCode: () -> Unit, ) {
         var timerSeconds by remember { mutableStateOf(60) }
         var isTimerRunning by remember { mutableStateOf(true) }
 
-    val textFieldValues = remember { mutableStateListOf("", "", "", "", "", "") }
+        val textFieldValues = remember { mutableStateListOf("", "", "", "", "", "") }
+        val focusRequesters = remember { List(6) { FocusRequester() } }
 
     val allFieldsFilled = textFieldValues.all { it.isNotBlank() }
         // Эффект для таймера
@@ -398,24 +406,31 @@ fun ProoveEmail(navController: NavController, onResendCode: () -> Unit, ) {
                 // Поле ввода для кода с квадратами
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                )
+                {
                     textFieldValues.forEachIndexed { index, value ->
                         OutlinedTextField(
                             value = value,
                             onValueChange = { newValue ->
-                                textFieldValues[index] = newValue
-                                if (allFieldsFilled) {
-                                    if (code + "\n" == textFieldValues.joinToString("")) {
-                                        //TODO переход на след экран
+                                if (newValue.length <= 1 && newValue.all { it.isDigit() }) {
+                                    textFieldValues[index] = newValue
+
+                                    if (newValue.length == 1 && index == textFieldValues.lastIndex) {
+                                        if(textFieldValues.joinToString("")==code)
+                                        // переход на следующий экран
                                         navController.navigate("setPasswordScreen")
                                     }
+                                    if (newValue.length == 1 && index < textFieldValues.lastIndex) {
+                                        // Переключаем фокус на следующее поле
+                                        focusRequesters[index + 1].requestFocus()
+                                    }
                                 }
-
                             },
                             modifier = Modifier
                                 .width(42.dp)
                                 .height(48.dp)
-                                .padding(top = 1.dp), // Небольшой отступ
+                                .padding(top = 1.dp)
+                                .focusRequester(focusRequesters[index]), // Устанавливаем FocusRequester
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number
                             ),
@@ -451,6 +466,7 @@ fun SendCode(){
 // Генерация 6-значного кода
 fun generateVerificationCode(): String {
     return 111111.toString()
+    //пока что генерпция кода не реализована, т.к. не работает отправка через email
     //return (100000..999999).random().toString()
 }
 
@@ -473,10 +489,12 @@ fun sendVerificationCode(email: String) {
 }
 
 @Composable
-fun SetPasswordScreen(navController: NavController) {
+fun SetPasswordScreen(navController: NavController, context:Context) {
 
-    var PassFieldValues = remember { mutableStateListOf("", "", "", "") }
+    var passFieldValues = remember { mutableStateListOf("", "", "", "") }
     var indexOfPassChar by remember { mutableIntStateOf(0) }
+
+    val sharedPreferences = remember { getEncryptedSharedPreferences(context) }
 
     Box(
         Modifier
@@ -518,9 +536,9 @@ fun SetPasswordScreen(navController: NavController) {
             }
             Row(modifier = Modifier. padding(top = 30.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
 
-                PassFieldValues.forEachIndexed { index, value ->
+                passFieldValues.forEachIndexed { index, value ->
                     var painterr = painterResource(id = R.drawable.ellipse_notfilled)
-                    if (PassFieldValues[index]!=""){
+                    if (passFieldValues[index]!=""){
                         painterr = painterResource(id = R.drawable.ellipse_filled)
                     }
                     Image(
@@ -545,12 +563,19 @@ fun SetPasswordScreen(navController: NavController) {
                                 val buttonNumber = row * 3 + col + 1
                                 Button(
                                     onClick = {
-                                        if(indexOfPassChar<=3){
-                                            PassFieldValues[indexOfPassChar]=buttonNumber.toString()
+                                        if(indexOfPassChar<=2){
+                                            passFieldValues[indexOfPassChar]=buttonNumber.toString()
                                             indexOfPassChar++
                                         }
                                         else{
-
+                                            if(indexOfPassChar==3){
+                                                passFieldValues[indexOfPassChar]=buttonNumber.toString()
+                                                //сохранение пароля
+                                                val concatenatedValues = passFieldValues.joinToString("")
+                                                sharedPreferences.edit().putString("passFieldValues", concatenatedValues).apply()
+                                                //переход на некст экран
+                                                navController.navigate("CreateCardScreen")
+                                            }
                                         }
                                               },
                                     shape = RoundedCornerShape(100.dp),
@@ -575,15 +600,21 @@ fun SetPasswordScreen(navController: NavController) {
                         }
                         Column {
                             Button(
-                                onClick = {if(indexOfPassChar<=3){
-                                    PassFieldValues[indexOfPassChar]=0.toString()
-                                    indexOfPassChar++
-                                }
-                                else{
-                                    if(indexOfPassChar==4){
-                                        //TODO сохранение пароля
+                                onClick = {
+                                    if(indexOfPassChar<=2){
+                                        passFieldValues[indexOfPassChar]=0.toString()
+                                        indexOfPassChar++
                                     }
-                                }
+                                    else{
+                                        if(indexOfPassChar==3){
+                                            passFieldValues[indexOfPassChar]=0.toString()
+                                            //сохранение пароля
+                                            val concatenatedValues = passFieldValues.joinToString("")
+                                            sharedPreferences.edit().putString("passFieldValues", concatenatedValues).apply()
+                                            //переход на некст экран
+                                            navController.navigate("CreateCardScreen")
+                                        }
+                                    }
                                           },
                                 shape = RoundedCornerShape(100.dp),
                                 modifier = Modifier
@@ -605,11 +636,11 @@ fun SetPasswordScreen(navController: NavController) {
                                     onClick = {
                                         if(indexOfPassChar<5){
                                             if(indexOfPassChar>=1){
-                                                PassFieldValues[indexOfPassChar-1]=""
+                                                passFieldValues[indexOfPassChar-1]=""
                                                 indexOfPassChar--
                                             }
                                             if(indexOfPassChar==0){
-                                                PassFieldValues[indexOfPassChar]=""
+                                                passFieldValues[indexOfPassChar]=""
                                             }
                                         }
                                     else {
@@ -629,6 +660,7 @@ fun SetPasswordScreen(navController: NavController) {
                         }
                     }
                     Spacer(Modifier.height(20.dp))
+
                 }
             }
 
@@ -636,13 +668,238 @@ fun SetPasswordScreen(navController: NavController) {
     }
 }
 
+
+fun getEncryptedSharedPreferences(context: Context): SharedPreferences {
+    val masterKeyAlias = MasterKey.Builder(context)
+        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+        .build()
+
+    return EncryptedSharedPreferences.create(
+        context,
+        "encrypted_prefs",
+        masterKeyAlias,
+        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateCardScreen(navController: NavController) {
     Box(Modifier.fillMaxSize().background(Color.White)){
+        Column(Modifier.padding(vertical = 20.dp, horizontal = 15.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    "Создание карты\n пациента",
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Start,
+                    fontWeight = FontWeight.Bold
+                )
+                TextButton(
+                    onClick = { navController.navigate("main") },
+                    modifier = Modifier
+                        //.align(Alignment.Start)
+                        .padding(16.dp)
+                ) {
+                    Text("Пропустить")
+                }
+            }
+            Row {
+                Text(text = "Без карты пациента вы не сможете заказать\nанализы.", color = Color.Black.copy(0.5f), fontSize = 14.sp)
+            }
+            Row{
+                Text(text = "В картах пациентов будут храниться результаты\nанализов вас и ваших близких.", color = Color.Black.copy(0.5f), fontSize = 14.sp)
+            }
+            Box{
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
 
+                    Row{
+                        var textState by remember { mutableStateOf(TextFieldValue("")) }
+                        OutlinedTextField(
+                            value = textState,
+                            onValueChange = { textState = it },
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            //  .padding(start = 10.dp, end = 10.dp),
+                            enabled = true,
+                            readOnly = false,
+                            placeholder = {
+                                Text(text = "Имя",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    lineHeight = 20.sp)
+                            },
+                            textStyle = TextStyle(
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Normal,
+                                lineHeight = 20.sp
+                            ),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = Color(0xFFEBEBEB),
+                                unfocusedContainerColor = Color(0xFFEBEBEB),
+                                focusedTextColor = Color.Black.copy(0.5f),
+                                unfocusedTextColor = Color.Black.copy(0.5f),
+                                focusedBorderColor = Color(0xFFEBEBEB),
+                                unfocusedBorderColor = Color(0xFFEBEBEB)
+                            ),
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                    }
+                    Row{
+                        var textState by remember { mutableStateOf(TextFieldValue("")) }
+                        OutlinedTextField(
+                            value = textState,
+                            onValueChange = { textState = it },
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            //  .padding(start = 10.dp, end = 10.dp),
+                            enabled = true,
+                            readOnly = false,
+                            placeholder = {
+                                Text(text = "Отчество",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    lineHeight = 20.sp)
+                            },
+                            textStyle = TextStyle(
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Normal,
+                                lineHeight = 20.sp
+                            ),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = Color(0xFFEBEBEB),
+                                unfocusedContainerColor = Color(0xFFEBEBEB),
+                                focusedTextColor = Color.Black.copy(0.5f),
+                                unfocusedTextColor = Color.Black.copy(0.5f),
+                                focusedBorderColor = Color(0xFFEBEBEB),
+                                unfocusedBorderColor = Color(0xFFEBEBEB)
+                            ),
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                    }
+                    Row{
+                        var textState by remember { mutableStateOf(TextFieldValue("")) }
+                        OutlinedTextField(
+                            value = textState,
+                            onValueChange = { textState = it },
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            //  .padding(start = 10.dp, end = 10.dp),
+                            enabled = true,
+                            readOnly = false,
+                            placeholder = {
+                                Text(text = "Фамилия",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    lineHeight = 20.sp)
+                            },
+                            textStyle = TextStyle(
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Normal,
+                                lineHeight = 20.sp
+                            ),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = Color(0xFFEBEBEB),
+                                unfocusedContainerColor = Color(0xFFEBEBEB),
+                                focusedTextColor = Color.Black.copy(0.5f),
+                                unfocusedTextColor = Color.Black.copy(0.5f),
+                                focusedBorderColor = Color(0xFFEBEBEB),
+                                unfocusedBorderColor = Color(0xFFEBEBEB)
+                            ),
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                    }
+                    Row{
+                        var textState by remember { mutableStateOf(TextFieldValue("")) }
+                        OutlinedTextField(
+                            value = textState,
+                            onValueChange = { textState = it },
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            //  .padding(start = 10.dp, end = 10.dp),
+                            enabled = true,
+                            readOnly = false,
+                            placeholder = {
+                                Text(text = "Дата рождения",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    lineHeight = 20.sp)
+                            },
+                            textStyle = TextStyle(
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Normal,
+                                lineHeight = 20.sp
+                            ),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = Color(0xFFEBEBEB),
+                                unfocusedContainerColor = Color(0xFFEBEBEB),
+                                focusedTextColor = Color.Black.copy(0.5f),
+                                unfocusedTextColor = Color.Black.copy(0.5f),
+                                focusedBorderColor = Color(0xFFEBEBEB),
+                                unfocusedBorderColor = Color(0xFFEBEBEB)
+                            ),
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                    }
+                    Row{
+                        var expanded by remember { mutableStateOf(false) }
+                        var selectedGender by remember { mutableStateOf("Пол") }
+                        val genders = listOf("Мужской", "Женский")
+
+                        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                            OutlinedTextField(
+                                readOnly = true,
+                                value = selectedGender,
+                                onValueChange = { /* Ничего не делаем, так как поле только для выбора */ },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { expanded = true },
+                                trailingIcon = {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.icons),
+                                        contentDescription = "Custom Icon"
+                                    )
+                                },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = Color(0xFFEBEBEB),
+                                    unfocusedContainerColor = Color(0xFFEBEBEB),
+                                    focusedTextColor = Color.Black.copy(0.5f),
+                                    unfocusedTextColor = Color.Black.copy(0.5f),
+                                    focusedBorderColor = Color(0xFFEBEBEB),
+                                    unfocusedBorderColor = Color(0xFFEBEBEB)
+                                ),
+                                shape = RoundedCornerShape(20.dp)
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                genders.forEach { gender ->
+                                    DropdownMenuItem(onClick = {
+                                        selectedGender = gender
+                                        expanded = false
+                                    },
+                                        text = {Text(text = gender)})
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+                    Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()){
+                        PrimaryButton(text = "Создать", onClick = {insertDataOnDB()}, modifier = Modifier.fillMaxWidth().height(50.dp).padding(0.dp))
+                    }
+                    Spacer(Modifier.height(30.dp))
+                }
+            }
+        }
     }
 }
-
+fun insertDataOnDB(){}
 
 
 

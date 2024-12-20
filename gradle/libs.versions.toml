@@ -12,7 +12,9 @@ navigationCompose = "2.8.5"
 accompanist = "0.31.6-rc"
 compose_ui = "1.6.0"           # Версия Jetpack Compose UI
 compose_material3 = "1.2.0"
-supabase = "2.0.1" # Версия Supabase
+supabase = "2.0.1"
+securityCryptoKtx = "1.1.0-alpha06"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -37,6 +39,7 @@ compose-material3 = { group = "androidx.compose.material3", name = "material3", 
 compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "compose_ui" }
 supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabase" }
 supabase-gotrue = { module = "io.github.jan-tennert.supabase:gotrue-kt", version.ref = "supabase" }
+androidx-security-crypto-ktx = { group = "androidx.security", name = "security-crypto-ktx", version.ref = "securityCryptoKtx" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
