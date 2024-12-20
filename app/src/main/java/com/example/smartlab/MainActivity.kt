@@ -31,7 +31,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -473,7 +475,8 @@ fun sendVerificationCode(email: String) {
 @Composable
 fun SetPasswordScreen(navController: NavController) {
 
-    val PassFieldValues = remember { mutableStateListOf("", "", "", "") }
+    var PassFieldValues = remember { mutableStateListOf("", "", "", "") }
+    var indexOfPassChar by remember { mutableIntStateOf(0) }
 
     Box(
         Modifier
@@ -514,9 +517,10 @@ fun SetPasswordScreen(navController: NavController) {
                 }
             }
             Row(modifier = Modifier. padding(top = 30.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                var painterr = painterResource(id = R.drawable.ellipse_notfilled)
+
                 PassFieldValues.forEachIndexed { index, value ->
-                    if (value!=""){
+                    var painterr = painterResource(id = R.drawable.ellipse_notfilled)
+                    if (PassFieldValues[index]!=""){
                         painterr = painterResource(id = R.drawable.ellipse_filled)
                     }
                     Image(
@@ -540,7 +544,15 @@ fun SetPasswordScreen(navController: NavController) {
                             for (col in 0 until 3) {
                                 val buttonNumber = row * 3 + col + 1
                                 Button(
-                                    onClick = {},
+                                    onClick = {
+                                        if(indexOfPassChar<=3){
+                                            PassFieldValues[indexOfPassChar]=buttonNumber.toString()
+                                            indexOfPassChar++
+                                        }
+                                        else{
+
+                                        }
+                                              },
                                     shape = RoundedCornerShape(100.dp),
                                     modifier = Modifier
                                         .height(100.dp)
@@ -555,21 +567,68 @@ fun SetPasswordScreen(navController: NavController) {
                             }
                         }
                     }
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                        Button(
-                            onClick = {},
-                            shape = RoundedCornerShape(100.dp),
-                            modifier = Modifier
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp, alignment = Alignment.CenterHorizontally)) {
+                        Column(){
+                            Box(modifier = Modifier
                                 .height(100.dp)
-                                .width(100.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFF5F5F9),
-                                disabledContainerColor = Color(0xFFF5F5F9)
-                            )
-                        ) {
-                            Text(text = 0.toString(), color = Color.Black, fontSize = 24.sp)
+                                .width(100.dp))
+                        }
+                        Column {
+                            Button(
+                                onClick = {if(indexOfPassChar<=3){
+                                    PassFieldValues[indexOfPassChar]=0.toString()
+                                    indexOfPassChar++
+                                }
+                                else{
+                                    if(indexOfPassChar==4){
+                                        //TODO сохранение пароля
+                                    }
+                                }
+                                          },
+                                shape = RoundedCornerShape(100.dp),
+                                modifier = Modifier
+                                    .height(90.dp)
+                                    .width(90.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFF5F5F9),
+                                    disabledContainerColor = Color(0xFFF5F5F9)
+                                )
+                            ) {
+                                Text(text = 0.toString(), color = Color.Black, fontSize = 24.sp)
+                            }
+                        }
+                        Column {
+                            Box(modifier = Modifier
+                                .height(100.dp)
+                                .width(100.dp), contentAlignment = Alignment.Center) {
+                                Button(
+                                    onClick = {
+                                        if(indexOfPassChar<5){
+                                            if(indexOfPassChar>=1){
+                                                PassFieldValues[indexOfPassChar-1]=""
+                                                indexOfPassChar--
+                                            }
+                                            if(indexOfPassChar==0){
+                                                PassFieldValues[indexOfPassChar]=""
+                                            }
+                                        }
+                                    else {
+
+                                    }
+                                              }, colors = ButtonDefaults.buttonColors(contentColor = Color.White, containerColor = Color.White)) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.del_icon), // Ссылка на векторное изображение
+                                        contentDescription = "..",
+                                        contentScale = ContentScale.Fit, // Масштабирование изображения
+                                        modifier = Modifier
+                                            .size(35.dp) // Размер изображения
+                                            .fillMaxSize()
+                                    )
+                                }
+                            }
                         }
                     }
+                    Spacer(Modifier.height(20.dp))
                 }
             }
 
@@ -579,7 +638,9 @@ fun SetPasswordScreen(navController: NavController) {
 
 @Composable
 fun CreateCardScreen(navController: NavController) {
-    Box(Modifier.fillMaxSize().background(Color.White)){}
+    Box(Modifier.fillMaxSize().background(Color.White)){
+
+    }
 }
 
 
